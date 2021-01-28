@@ -6,7 +6,7 @@ chsiel-testers_negedeg_reset.patch is for chisel-testers tag: v1.5.1
 
 These patches are compatible with chisel-projects
 
-##Usage
+## Usage
 
 ```
   $ git clone https://github.com/chipsalliance/firrtl
