@@ -1,0 +1,51 @@
+diff --git a/build.sbt b/build.sbt
+index 97bbb06..d867782 100644
+--- a/build.sbt
++++ b/build.sbt
+@@ -35,7 +35,7 @@ def javacOptionsVersion(scalaVersion: String): Seq[String] = {
+ }
+ 
+ organization := "edu.berkeley.cs"
+-version := "1.5.1"
++version := "1.5.1-negedge-async-reset"
+ name := "chisel-iotesters"
+ 
+ scalaVersion := "2.12.10"
+diff --git a/src/main/scala/chisel3/iotesters/VCSBackend.scala b/src/main/scala/chisel3/iotesters/VCSBackend.scala
+index d2c5277..6d14bbc 100644
+--- a/src/main/scala/chisel3/iotesters/VCSBackend.scala
++++ b/src/main/scala/chisel3/iotesters/VCSBackend.scala
+@@ -60,8 +60,8 @@ object genVCSVerilogHarness {
+     val (inputs, outputs) = fixnames(getPorts(dut, "_"))
+ 
+     writer write "module test;\n"
+-    writer write "  reg clock = 1;\n"
+-    writer write "  reg reset = 1;\n"
++//    writer write "  reg clock = 1;\n"
++//    writer write "  reg reset = 1;\n"
+     val delay = if (isGateLevel) "#0.1" else ""
+     inputs foreach { case (node, name) =>
+       writer write s"  reg[${node.getWidth - 1}:0] $name = 0;\n"
+@@ -75,15 +75,19 @@ object genVCSVerilogHarness {
+     }
+ 
+     writer write "  always #`CLOCK_PERIOD clock = ~clock;\n"
++    writer write "  wire rst_n;\n"
++    writer write "  assign rst_n = ~reset;\n"
+     writer write "  reg vcdon = 0;\n"
+     writer write "  reg [1023:0] vcdfile = 0;\n"
+     writer write "  reg [1023:0] vpdfile = 0;\n"
+ 
+     writer write "\n  /*** DUT instantiation ***/\n"
+     writer write s"  $dutName $dutName(\n"
+-    writer write "    .clock(clock),\n"
+-    writer write "    .reset(reset),\n"
+-    writer write ((inputs ++ outputs).unzip._2 map (name => s"    .$name(${name}_delay)") mkString ",\n")
++//    writer write "    .clock(clock),\n"
++//    writer write "    .reset(reset),\n"
++    writer write ((inputs ++ outputs).unzip._2 map (name => name match {
++                     case "reset" =>  "    .reset(rst_n)"
++                     case _       => s"    .$name(${name}_delay)"}) mkString ",\n")
+     writer write "  );\n\n"
+ 
+     writer write "  initial begin\n"
